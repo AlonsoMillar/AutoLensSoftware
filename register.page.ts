@@ -1,7 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms'; // Importante para el [formGroup]
-import { Router } from '@angular/router';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { NavController, ToastController, LoadingController } from '@ionic/angular'; 
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -12,95 +10,88 @@ import { AuthService } from '../../services/auth.service';
 })
 export class RegisterPage implements OnInit {
 
-  // Definimos las propiedades que el HTML está reclamando
-  registerForm: FormGroup;
-  showPassword = false;
+  // Variables conectadas al HTML vía ngModel
+  nombre: string = '';
+  email: string = '';
+  password: string = '';
+
+  // --- VARIABLES PARA EL OJITO ---
+  passwordType: string = 'password'; 
+  passwordIcon: string = 'eye-off-outline'; 
 
   constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router,
+    private navCtrl: NavController,
+    private toastCtrl: ToastController,
     private loadingCtrl: LoadingController,
-    private toastCtrl: ToastController
-  ) {
-    // Inicializamos el formulario con validaciones básicas
-    this.registerForm = this.fb.group({
-      nombre: ['', [Validators.required, Validators.minLength(3)]],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
-    });
+    private authService: AuthService
+  ) { }
+
+  ngOnInit() {
   }
 
-  ngOnInit() {}
-
-  // Función para el ojo de la contraseña
+  // --- FUNCIÓN DEL OJITO (Aquí está la que no encontraba) ---
   togglePassword() {
-    this.showPassword = !this.showPassword;
-  }
-
-  // Función de registro manual (El (ngSubmit)="register()" del HTML)
-  async register() {
-    if (this.registerForm.valid) {
-      const loading = await this.loadingCtrl.create({ message: 'Creando cuenta...' });
-      await loading.present();
-
-      const { nombre, email, password } = this.registerForm.value;
-      
-      // Llamamos al servicio (Aquí luego entrará SQLite)
-      const success = await this.authService.registerLocal(nombre, email, password);
-      
-      await loading.dismiss();
-
-      if (success) {
-        const toast = await this.toastCtrl.create({
-          message: '¡Registro exitoso!',
-          duration: 2000,
-          color: 'success'
-        });
-        await toast.present();
-        this.router.navigate(['/home']);
-      }
+    if (this.passwordType === 'password') {
+      this.passwordType = 'text';
+      this.passwordIcon = 'eye-outline';
     } else {
-      console.log('Formulario no válido');
+      this.passwordType = 'password';
+      this.passwordIcon = 'eye-off-outline';
     }
   }
 
-  // La función de Google que ya teníamos
- async loginWithGoogle() {
+  // --- FUNCIÓN DE REGISTRO ---
+  async registerLocal() {
+    // 1. Validar que no haya campos vacíos
+    if (!this.nombre || !this.email || !this.password) {
+      const toast = await this.toastCtrl.create({
+        message: 'Por favor, completa todos los campos.',
+        duration: 2000,
+        color: 'warning',
+        position: 'top',
+        icon: 'alert-circle-outline'
+      });
+      await toast.present();
+      return;
+    }
+
     const loading = await this.loadingCtrl.create({
-      message: 'Vinculando con Google...',
-      spinner: 'crescent'
+      message: 'Creando cuenta...',
+      spinner: 'dots'
     });
     await loading.present();
 
-    try {
-      // 1. Llamamos al servicio (esto abre la ventana que ya te funciona)
-      const user = await this.authService.loginWithGoogle();
-      
-      await loading.dismiss(); // Cerramos el "Cargando..."
+    // 2. Llamamos al servicio (El Guardia le avisa al Archivero)
+    const success = await this.authService.registerLocal(this.nombre, this.email, this.password);
+    
+    await loading.dismiss();
 
-      if (user) {
-        // 2. Si Google nos dio los datos, mandamos el mensaje de éxito
-        const toast = await this.toastCtrl.create({
-          message: `¡Cuenta vinculada con éxito!`,
-          duration: 2000,
-          color: 'success',
-          position: 'top'
-        });
-        await toast.present();
-
-        // 3. ¡ESTA ES LA LÍNEA CLAVE! Navegamos al Home
-        console.log('Navegando al Home desde Registro...');
-        this.router.navigate(['/home']);
-      }
-    } catch (error) {
-      await loading.dismiss();
-      console.error('Error en el proceso de registro con Google:', error);
-      
+    // 3. Evaluamos el resultado
+    if (success) {
       const toast = await this.toastCtrl.create({
-        message: 'Error al vincular con Google',
+        message: '¡Cuenta creada con éxito!',
         duration: 2000,
-        color: 'danger'
+        color: 'success',
+        position: 'top',
+        icon: 'checkmark-circle-outline'
+      });
+      await toast.present();
+
+      // Limpiamos los campos
+      this.nombre = '';
+      this.email = '';
+      this.password = '';
+      
+      // Viaje directo al Home
+      this.navCtrl.navigateRoot('/home'); 
+    } else {
+      // Si success es false, probablemente el correo ya existe
+      const toast = await this.toastCtrl.create({
+        message: 'El correo ya está registrado. Intenta con otro o inicia sesión.',
+        duration: 3500,
+        color: 'danger',
+        position: 'top',
+        icon: 'close-circle-outline'
       });
       await toast.present();
     }
