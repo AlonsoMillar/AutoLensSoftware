@@ -11,7 +11,7 @@
         <p>Sistemas listos para escanear</p>
       </div>
       
-      <ion-avatar class="profile-pic" routerLink="/perfil">
+      <ion-avatar class="profile-pic" routerLink="/profile" style="cursor: pointer;">
         <img *ngIf="userData.foto" [src]="userData.foto" alt="Perfil" />
         <ion-icon *ngIf="!userData.foto" name="person-circle" class="avatar-icon"></ion-icon>
       </ion-avatar>

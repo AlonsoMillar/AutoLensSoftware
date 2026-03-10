@@ -33,12 +33,12 @@ export class HomePage implements OnInit {
   }
 
   // Recupera la sesión guardada por el AuthService
-  loadUserData() {
-    const session = localStorage.getItem('autolens_session');
-    if (session) {
-      this.userData = JSON.parse(session);
-    }
+async loadUserData() {
+  const session = await this.authService.getSession();
+  if (session) {
+    this.userData = session;
   }
+}
 
   // Cerrar sesión
   async logout() {
