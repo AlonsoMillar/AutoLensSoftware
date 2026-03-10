@@ -8,14 +8,14 @@
 
     <ion-content>
       <ion-list lines="none">
-        <ion-item button routerLink="/perfil" routerDirection="forward">
+        <ion-item routerLink="/profile" menuClose lines="none">
           <ion-icon slot="start" name="person-outline"></ion-icon>
-          <ion-label>Mi Perfil</ion-label>
+          <ion-label>Mi perfil</ion-label>
         </ion-item>
 
-        <ion-item button (click)="showAbout()">
+        <ion-item routerLink="/quienes-somos" menuClose lines="none">
           <ion-icon slot="start" name="information-circle-outline"></ion-icon>
-          <ion-label>Quiénes Somos</ion-label>
+          <ion-label>Quiénes somos</ion-label>
         </ion-item>
 
         <ion-divider></ion-divider>
